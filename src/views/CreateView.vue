@@ -29,7 +29,10 @@
         <p class="text-red-500 text-sm">{{ errors.desc }}</p>
 
         <div class="btn-div mt-5">
-          <button class="btn px-5 py-3 rounded-md text-white text-md cursor-pointer w-full bg-green-500">Create</button>
+          <button class="btn px-5 py-3 rounded-md text-white text-md cursor-pointer w-full 
+          bg-green-500" :disabled="isValid || loading" :class="{ 'opacity-50': isValid || loading }">
+            {{ isValid || loading ? 'Loading...' : 'Create' }}
+          </button>
         </div>
       </form>
     </div>
@@ -37,10 +40,13 @@
 </template>
 
 <script>
+import http from '../axios.config'
+
 export default {
   data() {
     return {
       isTrue: false,
+      loading: false,
       product: {
         name: '',
         desc: '',
@@ -54,13 +60,19 @@ export default {
     }
   },
   computed: {
-    
+    isValid() {
+      if (this.product.name && this.product.desc && this.product.image) {
+        return false
+      } else {
+        return true
+      }
+    }
   },
   watch: {
     product: {
       handler(newValue) {
-        if (newValue.name.length <= 5) {
-          this.errors.name = "Product name can't be less than 5"
+        if (newValue.name.length <= 3) {
+          this.errors.name = "Product name can't be less than 4"
         } else if (newValue.name.length >= 20) {
           this.errors.name = "Product name can't be more than 20"
         } else {
@@ -83,14 +95,28 @@ export default {
         } else {
           this.errors.image = ""
         }
+      },
+      deep: true
     },
-    deep: true
   },
-},
-methods: {
-  createProduct() {
-    console.log(this.product);
+  methods: {
+    async createProduct() {
+      this.isValid
+      this.loading = true
+      const res = await http.post('/products.json', this.product)
+      this.loading = false
+      this.product = {
+        name: '',
+        desc: '',
+        image: ''
+      }
+      console.log(res);
+      if (res.status === 200) {
+        this.$router.push({name: 'home'})
+      }
+    },
+
   }
-}
+  // Modal => edit products (put, patch), delete Card !important
 }
 </script>
