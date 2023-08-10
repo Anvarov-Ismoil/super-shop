@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="head flex items-center justify-between my-5 mt-7">
-      <h1 class="text-3xl font-bold">Create product</h1>
+      <h1 class="text-3xl font-bold">Edit product</h1>
 
       <button class="btn px-5 py-3 rounded-md text-white text-md cursor-pointer font-bold bg-blue-500"
         @click="$router.push({ name: 'home' })">
@@ -11,8 +11,8 @@
     </div>
 
     <div class="form w-[700px] mx-auto p-7 shadow-md rounded-md">
-      <h3>Create Product</h3>
-      <form class="flex flex-col content-between" @submit.prevent="createProduct">
+      <h3>Edit Product</h3>
+      <form class="flex flex-col content-between" @submit.prevent="editProduct">
         <input class="border border-slate-300 px-5 py-2 rounded-md mt-5" type="text" placeholder="Product name"
           v-model.trim="product.name">
         <p class="text-red-500 text-sm">
@@ -31,7 +31,7 @@
         <div class="btn-div mt-5">
           <button class="btn px-5 py-3 rounded-md text-white text-md cursor-pointer w-full 
           bg-green-500" :disabled="isValid || loading" :class="{ 'opacity-50': isValid || loading }">
-            {{ isValid || loading ? 'Loading...' : 'Create' }}
+            {{ isValid || loading ? 'Loading...' : 'Edit' }}
           </button>
         </div>
       </form>
@@ -45,6 +45,7 @@ import http from '../axios.config'
 export default {
   data() {
     return {
+      pID: this.$route.params.id,
       isTrue: false,
       loading: false,
       product: {
@@ -100,10 +101,16 @@ export default {
     },
   },
   methods: {
-    async createProduct() {
+    async getOneProduct() {
+      const res = await http.get(`/products/${this.pID}.json`)
+      this.product.name = res.data.name
+      this.product.desc = res.data.desc
+      this.product.image = res.data.image
+    },
+    async editProduct() {
       this.isValid
       this.loading = true
-      const res = await http.post('/products.json', this.product)
+      const res = await http.patch(`/products/${this.pID}.json`, this.product)
       this.loading = false
       this.product = {
         name: '',
@@ -111,11 +118,12 @@ export default {
         image: ''
       }
       if (res.status === 200) {
-        this.$router.push({name: 'home'})
+        this.$router.push({ name: 'home' })
       }
     },
-
+  },
+  mounted() {
+    this.getOneProduct()
   }
-  // Modal => edit products (put, patch), delete Card !important
 }
 </script>
